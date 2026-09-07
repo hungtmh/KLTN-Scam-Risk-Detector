@@ -1,0 +1,567 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-09-04",
+  "thresholds": {
+    "caution": 40,
+    "danger": 70
+  },
+  "keywordGroups": {
+    "URGENCY": {
+      "ruleCode": "TEXT_URGENCY_PRESSURE",
+      "ruleName": "Tạo áp lực khẩn cấp",
+      "description": "Tin nhắn thúc ép người nhận hành động ngay, không kịp suy nghĩ",
+      "severity": "HIGH",
+      "score": 10,
+      "keywords": [
+        "sắp bị khóa",
+        "sẽ bị khóa",
+        "bị khóa",
+        "tạm khóa",
+        "khẩn cấp",
+        "ngay lập tức",
+        "trong vòng 24h",
+        "trong vòng 2 giờ",
+        "hết hạn",
+        "cuối cùng",
+        "gấp",
+        "nhanh chóng",
+        "ngay hôm nay",
+        "trước 24h",
+        "hạn chót",
+        "nếu không sẽ",
+        "sắp hết hạn"
+      ]
+    },
+    "IMPERSONATION": {
+      "ruleCode": "TEXT_IMPERSONATION",
+      "ruleName": "Giả danh tổ chức có thẩm quyền",
+      "description": "Nhắc tên ngân hàng, cơ quan nhà nước hoặc đơn vị vận chuyển",
+      "severity": "HIGH",
+      "score": 15,
+      "keywords": [
+        "ngân hàng",
+        "vietcombank",
+        "techcombank",
+        "bidv",
+        "agribank",
+        "vietinbank",
+        "mbbank",
+        "acb",
+        "sacombank",
+        "tpbank",
+        "vpbank",
+        "công an",
+        "viện kiểm sát",
+        "tòa án",
+        "cục thuế",
+        "bộ công an",
+        "bảo hiểm xã hội",
+        "cơ quan chức năng",
+        "nhà mạng",
+        "viettel",
+        "vinaphone",
+        "mobifone",
+        "shipper",
+        "giao hàng tiết kiệm",
+        "giao hàng nhanh",
+        "ghtk",
+        "ghn",
+        "viettel post"
+      ]
+    },
+    "SENSITIVE_INFO": {
+      "ruleCode": "TEXT_SENSITIVE_INFO_REQUEST",
+      "ruleName": "Yêu cầu thông tin nhạy cảm",
+      "description": "Đòi OTP, mật khẩu, số thẻ hoặc yêu cầu đăng nhập/xác minh",
+      "severity": "CRITICAL",
+      "score": 12,
+      "keywords": [
+        "otp",
+        "mã xác thực",
+        "mã xác minh",
+        "mật khẩu",
+        "số thẻ",
+        "cvv",
+        "mã pin",
+        "cccd",
+        "cmnd",
+        "căn cước",
+        "số tài khoản",
+        "đăng nhập",
+        "xác minh",
+        "xác thực",
+        "cập nhật thông tin",
+        "kích hoạt lại"
+      ]
+    },
+    "MONEY_TRANSFER": {
+      "ruleCode": "TEXT_MONEY_REQUEST",
+      "ruleName": "Yêu cầu chuyển tiền hoặc đóng phí",
+      "description": "Nội dung yêu cầu nạp tiền, đóng phí, đặt cọc",
+      "severity": "HIGH",
+      "score": 8,
+      "keywords": [
+        "chuyển khoản",
+        "chuyển tiền",
+        "nạp tiền",
+        "đóng phí",
+        "phí vận chuyển",
+        "tạm ứng",
+        "đặt cọc",
+        "cọc trước",
+        "thanh toán trước",
+        "phí hồ sơ",
+        "phí xử lý",
+        "lệ phí",
+        "hoàn tiền",
+        "thu hộ"
+      ]
+    },
+    "TOO_GOOD": {
+      "ruleCode": "TEXT_TOO_GOOD_TO_BE_TRUE",
+      "ruleName": "Lợi ích bất thường, quá tốt để tin",
+      "description": "Hứa hẹn trúng thưởng, quà tặng hoặc lợi nhuận cao bất thường",
+      "severity": "HIGH",
+      "score": 12,
+      "keywords": [
+        "trúng thưởng",
+        "trúng giải",
+        "quà tặng",
+        "miễn phí",
+        "lợi nhuận cao",
+        "ưu đãi đặc biệt",
+        "nhận quà",
+        "phần thưởng",
+        "hoàn vốn",
+        "lãi suất cao",
+        "cam kết lãi",
+        "đầu tư sinh lời"
+      ]
+    },
+    "JOB_OFFER": {
+      "ruleCode": "TEXT_JOB_OFFER",
+      "ruleName": "Mời chào việc làm online",
+      "description": "Mẫu tin tuyển cộng tác viên, việc nhẹ lương cao",
+      "severity": "MEDIUM",
+      "score": 10,
+      "keywords": [
+        "việc nhẹ lương cao",
+        "tuyển cộng tác viên",
+        "làm việc tại nhà",
+        "không cần kinh nghiệm",
+        "ctv online",
+        "chốt đơn",
+        "nhiệm vụ đơn giản",
+        "thu nhập mỗi ngày",
+        "làm nhiệm vụ"
+      ]
+    }
+  },
+  "brandGroups": {
+    "BRAND:BANK": [
+      "vietcombank",
+      "techcombank",
+      "bidv",
+      "agribank",
+      "vietinbank",
+      "mbbank",
+      "sacombank",
+      "tpbank",
+      "vpbank",
+      "napas",
+      "vietqr"
+    ],
+    "BRAND:AUTHORITY": [
+      "công an",
+      "viện kiểm sát",
+      "tòa án",
+      "cục thuế",
+      "bộ công an",
+      "bảo hiểm xã hội",
+      "cơ quan điều tra"
+    ],
+    "BRAND:SHIPPER": [
+      "shipper",
+      "giao hàng tiết kiệm",
+      "giao hàng nhanh",
+      "ghtk",
+      "ghn",
+      "viettel post",
+      "shopee express"
+    ]
+  },
+  "brandDomains": {
+    "vietcombank": "vietcombank.com.vn",
+    "techcombank": "techcombank.com.vn",
+    "bidv": "bidv.com.vn",
+    "agribank": "agribank.com.vn",
+    "vietinbank": "vietinbank.vn",
+    "mbbank": "mbbank.com.vn",
+    "sacombank": "sacombank.com.vn",
+    "tpbank": "tpbank.vn",
+    "vpbank": "vpbank.com.vn",
+    "shopee": "shopee.vn",
+    "lazada": "lazada.vn",
+    "facebook": "facebook.com",
+    "google": "google.com"
+  },
+  "whitelistDomains": [
+    "vietcombank.com.vn",
+    "techcombank.com.vn",
+    "bidv.com.vn",
+    "agribank.com.vn",
+    "vietinbank.vn",
+    "mbbank.com.vn",
+    "vnexpress.net",
+    "tuoitre.vn",
+    "thanhnien.vn",
+    "dantri.com.vn",
+    "vnpt.vn",
+    "gov.vn",
+    "google.com",
+    "youtube.com",
+    "github.com",
+    "shopee.vn",
+    "lazada.vn",
+    "tiki.vn"
+  ],
+  "suspiciousTlds": [
+    "tk",
+    "ml",
+    "ga",
+    "cf",
+    "gq",
+    "xyz",
+    "top",
+    "icu",
+    "buzz",
+    "click",
+    "work",
+    "fun"
+  ],
+  "shorteners": [
+    "bit.ly",
+    "tinyurl.com",
+    "goo.gl",
+    "t.co",
+    "ow.ly",
+    "is.gd",
+    "cutt.ly",
+    "rb.gy",
+    "shorturl.at"
+  ],
+  "rules": [
+    {
+      "code": "URL_NO_HTTPS",
+      "name": "Liên kết không dùng HTTPS",
+      "category": "URL",
+      "description": "Trang web không mã hoá kết nối, dữ liệu nhập vào có thể bị đọc trộm",
+      "severity": "HIGH",
+      "score": 12,
+      "requiresAll": [
+        "HAS_HTTP_URL"
+      ],
+      "requiresNone": [
+        "URL_ALL_WHITELISTED"
+      ]
+    },
+    {
+      "code": "URL_SUSPICIOUS_TLD",
+      "name": "Tên miền dùng đuôi rẻ tiền, hay bị lạm dụng",
+      "category": "URL",
+      "description": "Các đuôi như .tk, .ml, .xyz được cấp miễn phí nên rất phổ biến trong phishing",
+      "severity": "HIGH",
+      "score": 22,
+      "requiresAll": [
+        "URL_SUSPICIOUS_TLD"
+      ]
+    },
+    {
+      "code": "URL_TYPOSQUAT_BRAND",
+      "name": "Tên miền giả mạo thương hiệu",
+      "category": "URL",
+      "description": "Tên miền viết gần giống thương hiệu thật nhằm đánh lừa thị giác",
+      "severity": "CRITICAL",
+      "score": 35,
+      "requiresAll": [
+        "URL_TYPOSQUAT"
+      ]
+    },
+    {
+      "code": "URL_SHORTENER",
+      "name": "Dùng dịch vụ rút gọn liên kết",
+      "category": "URL",
+      "description": "Liên kết rút gọn che giấu địa chỉ đích thật sự",
+      "severity": "MEDIUM",
+      "score": 10,
+      "requiresAll": [
+        "URL_SHORTENER"
+      ]
+    },
+    {
+      "code": "URL_IP_HOST",
+      "name": "Liên kết trỏ thẳng tới địa chỉ IP",
+      "category": "URL",
+      "description": "Trang web hợp pháp gần như không bao giờ dùng IP trần thay cho tên miền",
+      "severity": "HIGH",
+      "score": 25,
+      "requiresAll": [
+        "URL_IP_HOST"
+      ]
+    },
+    {
+      "code": "TEXT_LEET_BRAND",
+      "name": "Viết biến thể tên thương hiệu để né bộ lọc",
+      "category": "TEXT",
+      "description": "Thay chữ bằng số kiểu vi3tc0mb4nk là dấu hiệu cố ý qua mặt hệ thống lọc",
+      "severity": "CRITICAL",
+      "score": 25,
+      "requiresAll": [
+        "LEET_BRAND"
+      ]
+    },
+    {
+      "code": "URL_WHITELISTED",
+      "name": "Toàn bộ liên kết thuộc danh sách tin cậy",
+      "category": "URL",
+      "description": "Giảm điểm để hạn chế cảnh báo nhầm với nội dung lành tính",
+      "severity": "LOW",
+      "score": -10,
+      "requiresAll": [
+        "HAS_URL",
+        "URL_ALL_WHITELISTED"
+      ]
+    },
+    {
+      "code": "TEXT_OTP_IN_MESSAGE",
+      "name": "Tin nhắn chứa mã OTP",
+      "category": "ENTITY",
+      "description": "OTP xuất hiện trong nội dung được chuyển tiếp là dấu hiệu bị dẫn dụ chia sẻ mã",
+      "severity": "CRITICAL",
+      "score": 28,
+      "requiresAll": [
+        "HAS_OTP"
+      ]
+    },
+    {
+      "code": "TEXT_FEE_WITH_AMOUNT",
+      "name": "Yêu cầu nộp phí kèm số tiền cụ thể",
+      "category": "ENTITY",
+      "description": "Nêu rõ số tiền phải nộp là bước chốt quen thuộc của lừa đảo tạm ứng",
+      "severity": "MEDIUM",
+      "score": 10,
+      "requiresAll": [
+        "GROUP:MONEY_TRANSFER",
+        "HAS_AMOUNT"
+      ]
+    },
+    {
+      "code": "TEXT_BANK_ACCOUNT_PRESENT",
+      "name": "Cung cấp số tài khoản để nhận tiền",
+      "category": "ENTITY",
+      "description": "Tin nhắn vừa hối chuyển tiền vừa kèm sẵn số tài khoản nhận",
+      "severity": "HIGH",
+      "score": 12,
+      "requiresAll": [
+        "HAS_BANK_ACCOUNT",
+        "GROUP:MONEY_TRANSFER"
+      ]
+    },
+    {
+      "code": "PATTERN_BANK_IMPERSONATION",
+      "name": "Mẫu lừa đảo giả mạo ngân hàng",
+      "category": "PATTERN",
+      "description": "Giả danh ngân hàng, tạo áp lực và đòi xác minh thông tin",
+      "severity": "CRITICAL",
+      "score": 30,
+      "pattern": true,
+      "requiresAll": [
+        "BRAND:BANK"
+      ],
+      "requiresAny": [
+        "GROUP:URGENCY",
+        "GROUP:SENSITIVE_INFO"
+      ]
+    },
+    {
+      "code": "PATTERN_AUTHORITY_THREAT",
+      "name": "Mẫu giả danh cơ quan chức năng đe doạ",
+      "category": "PATTERN",
+      "description": "Giả danh công an, toà án, cục thuế để đe doạ và ép chuyển tiền",
+      "severity": "CRITICAL",
+      "score": 35,
+      "pattern": true,
+      "requiresAll": [
+        "BRAND:AUTHORITY"
+      ],
+      "requiresAny": [
+        "GROUP:URGENCY",
+        "GROUP:MONEY_TRANSFER"
+      ]
+    },
+    {
+      "code": "PATTERN_PRIZE_SCAM",
+      "name": "Mẫu trúng thưởng đòi phí nhận giải",
+      "category": "PATTERN",
+      "description": "Hứa phần thưởng lớn rồi yêu cầu nộp phí trước khi nhận",
+      "severity": "CRITICAL",
+      "score": 45,
+      "pattern": true,
+      "requiresAll": [
+        "GROUP:TOO_GOOD",
+        "GROUP:MONEY_TRANSFER"
+      ]
+    },
+    {
+      "code": "PATTERN_FAKE_JOB",
+      "name": "Mẫu tuyển cộng tác viên giả",
+      "category": "PATTERN",
+      "description": "Mời việc nhẹ lương cao rồi yêu cầu tạm ứng tiền làm nhiệm vụ",
+      "severity": "CRITICAL",
+      "score": 45,
+      "pattern": true,
+      "requiresAll": [
+        "GROUP:JOB_OFFER",
+        "GROUP:MONEY_TRANSFER"
+      ]
+    },
+    {
+      "code": "PATTERN_FAKE_SHIPPER",
+      "name": "Mẫu giả mạo shipper thu tiền",
+      "category": "PATTERN",
+      "description": "Giả danh đơn vị giao hàng để thu tiền đơn không có thật",
+      "severity": "HIGH",
+      "score": 30,
+      "pattern": true,
+      "requiresAll": [
+        "BRAND:SHIPPER",
+        "GROUP:MONEY_TRANSFER"
+      ]
+    },
+    {
+      "code": "PATTERN_OTP_HARVEST",
+      "name": "Mẫu dẫn dụ tới trang thu thập thông tin",
+      "category": "PATTERN",
+      "description": "Vừa đòi thông tin nhạy cảm vừa kèm liên kết để người dùng nhập vào",
+      "severity": "CRITICAL",
+      "score": 25,
+      "pattern": true,
+      "requiresAll": [
+        "GROUP:SENSITIVE_INFO",
+        "HAS_URL"
+      ]
+    }
+  ],
+  "recommendations": {
+    "PATTERN_BANK_IMPERSONATION": {
+      "message": "Đây là tin nhắn lừa đảo giả mạo ngân hàng",
+      "reasons": [
+        "Giả danh ngân hàng để yêu cầu xác minh tài khoản",
+        "Tạo áp lực thời gian khiến người nhận hoảng sợ và làm theo",
+        "Ngân hàng thật KHÔNG BAO GIỜ gửi link yêu cầu xác minh qua tin nhắn"
+      ],
+      "nextSteps": [
+        "XOÁ tin nhắn này ngay",
+        "KHÔNG bấm vào liên kết và KHÔNG gọi số điện thoại trong tin nhắn",
+        "KHÔNG cung cấp OTP, mật khẩu cho bất kỳ ai",
+        "Liên hệ ngân hàng qua hotline in trên thẻ nếu bạn lo lắng",
+        "Gửi báo cáo lừa đảo để cảnh báo người khác"
+      ]
+    },
+    "PATTERN_AUTHORITY_THREAT": {
+      "message": "Đây là tin nhắn giả danh cơ quan chức năng để đe doạ",
+      "reasons": [
+        "Cơ quan nhà nước không làm việc và không yêu cầu chuyển tiền qua tin nhắn",
+        "Kịch bản đe doạ nhằm khiến nạn nhân hoảng loạn, mất khả năng kiểm chứng"
+      ],
+      "nextSteps": [
+        "KHÔNG chuyển tiền trong mọi trường hợp",
+        "KHÔNG cung cấp thông tin cá nhân hay số tài khoản",
+        "Gọi trực tiếp cơ quan công an địa phương để kiểm chứng",
+        "Gửi báo cáo lừa đảo"
+      ]
+    },
+    "PATTERN_PRIZE_SCAM": {
+      "message": "Đây là chiêu trúng thưởng giả để chiếm đoạt phí nhận giải",
+      "reasons": [
+        "Hứa phần thưởng lớn nhưng lại yêu cầu nộp tiền trước",
+        "Chương trình trúng thưởng hợp pháp không bao giờ thu phí của người trúng"
+      ],
+      "nextSteps": [
+        "KHÔNG chuyển bất kỳ khoản phí nào",
+        "Chặn và xoá liên hệ này",
+        "Gửi báo cáo lừa đảo"
+      ]
+    },
+    "PATTERN_FAKE_JOB": {
+      "message": "Đây là mẫu tuyển cộng tác viên giả để chiếm đoạt tiền tạm ứng",
+      "reasons": [
+        "Việc nhẹ lương cao kèm yêu cầu ứng tiền là dấu hiệu lừa đảo điển hình",
+        "Nạn nhân thường được trả hoa hồng vài lần đầu để tạo lòng tin trước khi mất khoản lớn"
+      ],
+      "nextSteps": [
+        "KHÔNG tạm ứng hay nạp tiền làm nhiệm vụ",
+        "Kiểm tra pháp nhân công ty trước khi hợp tác",
+        "Gửi báo cáo lừa đảo"
+      ]
+    },
+    "PATTERN_FAKE_SHIPPER": {
+      "message": "Đây có thể là chiêu giả mạo shipper thu tiền đơn không có thật",
+      "reasons": [
+        "Yêu cầu chuyển khoản trước khi nhận hàng là bất thường",
+        "Kẻ gian thường thúc giục vì lý do đang bận giao đơn khác"
+      ],
+      "nextSteps": [
+        "Yêu cầu kiểm tra hàng trước khi thanh toán",
+        "Đối chiếu đơn hàng trong ứng dụng mua sắm chính thức",
+        "KHÔNG chuyển khoản theo số tài khoản cá nhân"
+      ]
+    },
+    "PATTERN_OTP_HARVEST": {
+      "message": "Đây là tin nhắn dẫn dụ bạn nhập thông tin vào trang giả mạo",
+      "reasons": [
+        "Nội dung đòi thông tin nhạy cảm và kèm sẵn liên kết để người dùng nhập vào",
+        "Trang đích nhiều khả năng là bản sao giao diện của dịch vụ thật"
+      ],
+      "nextSteps": [
+        "KHÔNG bấm vào liên kết",
+        "KHÔNG nhập mật khẩu hoặc OTP ở bất kỳ trang nào tới từ tin nhắn",
+        "Truy cập dịch vụ bằng cách tự gõ địa chỉ chính thức"
+      ]
+    },
+    "_default": {
+      "SAFE": {
+        "message": "Không phát hiện dấu hiệu lừa đảo rõ ràng",
+        "reasons": [
+          "Nội dung không khớp với các mẫu lừa đảo đang theo dõi"
+        ],
+        "nextSteps": [
+          "Vẫn nên tự kiểm chứng nếu nội dung liên quan tới tiền bạc",
+          "Không cung cấp OTP hay mật khẩu cho bất kỳ ai"
+        ]
+      },
+      "CAUTION": {
+        "message": "Nội dung có một số dấu hiệu đáng ngờ, cần kiểm chứng thêm",
+        "reasons": [
+          "Xuất hiện dấu hiệu rủi ro nhưng chưa đủ để kết luận là lừa đảo"
+        ],
+        "nextSteps": [
+          "Xác minh lại với tổ chức được nhắc tới qua kênh chính thức",
+          "KHÔNG chuyển tiền hoặc cung cấp thông tin cho tới khi xác minh xong",
+          "Gửi báo cáo nếu bạn cho rằng đây là lừa đảo"
+        ]
+      },
+      "DANGER": {
+        "message": "Nội dung có rủi ro lừa đảo cao",
+        "reasons": [
+          "Khớp nhiều dấu hiệu lừa đảo cùng lúc"
+        ],
+        "nextSteps": [
+          "KHÔNG bấm liên kết, KHÔNG chuyển tiền, KHÔNG cung cấp OTP",
+          "XOÁ tin nhắn và chặn người gửi",
+          "Gửi báo cáo lừa đảo"
+        ]
+      }
+    }
+  }
+}

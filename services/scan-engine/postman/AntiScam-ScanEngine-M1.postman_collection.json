@@ -1,0 +1,465 @@
+{
+  "info": {
+    "name": "Anti-Scam · Scan Engine M1",
+    "description": "Bộ test cho POST /v1/scan/text — mốc M1 (rule engine đồng bộ, chưa có DB/auth/LLM).\n\nChạy server trước:\n  cd services/scan-engine\n  uvicorn app.main:app --reload --port 8000\n\nSau đó Run collection. Toàn bộ 14 request phải xanh.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "0 · Hạ tầng",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const b = pm.response.json();",
+                  "pm.test('service UP', () => pm.expect(b.status).to.eql('UP'));",
+                  "pm.test('đã nạp rule', () => pm.expect(b.ruleCount).to.be.above(0));",
+                  "console.log('Rules version:', b.rulesVersion, '| số rule:', b.ruleCount);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Danh sách rule đang hoạt động",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/v1/rules/active", "host": ["{{baseUrl}}"], "path": ["v1", "rules", "active"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const rules = pm.response.json();",
+                  "pm.test('có rule', () => pm.expect(rules.length).to.be.above(0));",
+                  "pm.test('không lộ điều kiện rule ra ngoài', () => {",
+                  "  rules.forEach(r => pm.expect(Object.keys(r).sort()).to.eql(['category','code','name','severity','weight']));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 · Nghiệp vụ — phải bắt được",
+      "item": [
+        {
+          "name": "TC01 · SMS giả mạo Vietcombank (DANGER)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"THÔNG BÁO: Tài khoản của quý khách sắp bị khóa. Vui lòng xác minh ngay tại http://vietc0mbank.com hoặc gọi 0912345678\",\n  \"source\": \"SMS\",\n  \"saveHistory\": true\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('DANGER', () => pm.expect(d.result.riskLevel).to.eql('DANGER'));",
+                  "pm.test('điểm >= 70', () => pm.expect(d.result.riskScore).to.be.at.least(70));",
+                  "pm.test('màu đỏ', () => pm.expect(d.result.levelColor).to.eql('RED'));",
+                  "pm.test('khuyến nghị chặn', () => pm.expect(d.recommendation.action).to.eql('BLOCK'));",
+                  "const codes = d.evidences.map(e => e.ruleCode);",
+                  "pm.test('nhận ra mẫu giả mạo ngân hàng', () => pm.expect(codes).to.include('PATTERN_BANK_IMPERSONATION'));",
+                  "pm.test('bắt được tên miền giả mạo', () => pm.expect(codes).to.include('URL_TYPOSQUAT_BRAND'));",
+                  "pm.test('trích xuất được số điện thoại chuẩn hoá', () => pm.expect(d.analysis.extractedEntities.phoneNumbers).to.include('+84912345678'));",
+                  "console.log('Score', d.result.riskScore, '| rules:', codes.join(', '));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC02 · Trúng thưởng đòi phí (DANGER)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Bạn đã trúng thưởng 100 triệu đồng! Vui lòng đóng phí 500k để nhận giải thưởng.\",\n  \"source\": \"ZALO\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "pm.test('DANGER', () => pm.expect(d.result.riskLevel).to.eql('DANGER'));",
+                  "pm.test('nhận ra mẫu trúng thưởng giả', () => pm.expect(d.analysis.patternMatches.map(p => p.pattern)).to.include('PATTERN_PRIZE_SCAM'));",
+                  "pm.test('trích xuất được số tiền', () => pm.expect(d.analysis.extractedEntities.amounts.length).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC03 · Teencode né bộ lọc: vi3tc0mb4nk (DANGER)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Tài khoản vi3tc0mb4nk của bạn sắp bị khóa, vui lòng xác minh ngay\",\n  \"source\": \"SMS\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "pm.test('DANGER dù viết biến thể', () => pm.expect(d.result.riskLevel).to.eql('DANGER'));",
+                  "pm.test('phát hiện cố tình né bộ lọc', () => pm.expect(d.evidences.map(e => e.ruleCode)).to.include('TEXT_LEET_BRAND'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC04 · Giả danh cơ quan chức năng (DANGER)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Bộ Công an thông báo bạn liên quan vụ án, yêu cầu chuyển khoản gấp để xác minh\",\n  \"source\": \"MESSENGER\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "pm.test('DANGER', () => pm.expect(d.result.riskLevel).to.eql('DANGER'));",
+                  "pm.test('nhận ra mẫu giả danh cơ quan', () => pm.expect(d.evidences.map(e => e.ruleCode)).to.include('PATTERN_AUTHORITY_THREAT'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC05 · Tuyển CTV việc nhẹ lương cao (DANGER)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Tuyển cộng tác viên làm việc tại nhà, không cần kinh nghiệm. Tạm ứng 200k để nhận nhiệm vụ đầu tiên\",\n  \"source\": \"FACEBOOK\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "pm.test('DANGER', () => pm.expect(d.result.riskLevel).to.eql('DANGER'));",
+                  "pm.test('nhận ra mẫu tuyển CTV giả', () => pm.expect(d.evidences.map(e => e.ruleCode)).to.include('PATTERN_FAKE_JOB'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC06 · Link IP trần + tên miền .tk (DANGER)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Nhấp vào http://185.23.44.9/login để nhận quà, hoặc https://vcb-verify.tk\",\n  \"source\": \"SMS\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "pm.test('DANGER', () => pm.expect(d.result.riskLevel).to.eql('DANGER'));",
+                  "const codes = d.evidences.map(e => e.ruleCode);",
+                  "pm.test('bắt được IP trần', () => pm.expect(codes).to.include('URL_IP_HOST'));",
+                  "pm.test('bắt được TLD đáng ngờ', () => pm.expect(codes).to.include('URL_SUSPICIOUS_TLD'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 · Chống báo động giả",
+      "item": [
+        {
+          "name": "TC07 · Tin nhắn đời thường (SAFE)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Chào bạn, mai đi ăn cơm không?\",\n  \"source\": \"ZALO\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "pm.test('SAFE', () => pm.expect(d.result.riskLevel).to.eql('SAFE'));",
+                  "pm.test('điểm 0', () => pm.expect(d.result.riskScore).to.eql(0));",
+                  "pm.test('không có evidence', () => pm.expect(d.evidences).to.be.empty);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC08 · Link báo chính thống (SAFE)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Đọc tin mới nhất tại https://vnexpress.net/kinh-doanh nhé bạn\",\n  \"source\": \"MESSENGER\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "pm.test('SAFE — không báo động giả với link lành tính', () => pm.expect(d.result.riskLevel).to.eql('SAFE'));",
+                  "pm.test('nhận ra tên miền tin cậy', () => pm.expect(d.analysis.matchedFacts).to.include('URL_ALL_WHITELISTED'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC09 · Link rút gọn đơn thuần (SAFE)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Xem ngay tại https://bit.ly/3xAbCd\",\n  \"source\": \"OTHER\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "pm.test('SAFE — rút gọn link chưa đủ để cảnh báo', () => pm.expect(d.result.riskLevel).to.eql('SAFE'));",
+                  "pm.test('vẫn ghi nhận là tín hiệu', () => pm.expect(d.evidences.map(e => e.ruleCode)).to.include('URL_SHORTENER'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 · Hợp đồng JSON & tính xác định",
+      "item": [
+        {
+          "name": "TC10 · Response đúng API Specification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Chuyển khoản 500k vào STK 19001234567 rồi gọi 0912345678, chi tiết tại http://vietc0mbank.com\",\n  \"source\": \"SMS\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const b = pm.response.json();",
+                  "pm.test('có success + data', () => { pm.expect(b.success).to.be.true; pm.expect(b.data).to.be.an('object'); });",
+                  "const d = b.data;",
+                  "pm.test('đủ khối theo spec', () => pm.expect(d).to.include.keys('scanId','input','result','analysis','evidences','recommendation','scannedAt','processingTime'));",
+                  "pm.test('result đúng 4 trường', () => pm.expect(Object.keys(d.result).sort()).to.eql(['confidence','levelColor','riskLevel','riskScore']));",
+                  "pm.test('điểm trong [0,100]', () => { pm.expect(d.result.riskScore).to.be.at.least(0); pm.expect(d.result.riskScore).to.be.at.most(100); });",
+                  "pm.test('extractedEntities đủ 5 nhóm', () => pm.expect(Object.keys(d.analysis.extractedEntities).sort()).to.eql(['amounts','bankAccounts','otpCodes','phoneNumbers','urls']));",
+                  "pm.test('mọi evidence đều có ruleCode truy ngược được', () => {",
+                  "  pm.expect(d.evidences.length).to.be.above(0);",
+                  "  d.evidences.forEach(e => {",
+                  "    pm.expect(e.ruleCode, 'ruleCode').to.be.a('string').and.not.empty;",
+                  "    pm.expect(e.ruleName, 'ruleName').to.be.a('string').and.not.empty;",
+                  "    pm.expect(['LOW','MEDIUM','HIGH','CRITICAL']).to.include(e.severity);",
+                  "    pm.expect(e.source).to.eql('rule');",
+                  "  });",
+                  "});",
+                  "pm.test('điểm = tổng evidence (không có điểm nào vô căn cứ)', () => {",
+                  "  const total = d.evidences.reduce((s, e) => s + e.score, 0);",
+                  "  pm.expect(d.result.riskScore).to.eql(Math.max(0, Math.min(100, total)));",
+                  "});",
+                  "pm.test('SĐT không bị đếm nhầm thành số tài khoản', () => pm.expect(d.analysis.extractedEntities.bankAccounts).to.not.include('0912345678'));",
+                  "pm.collectionVariables.set('lastScore', d.result.riskScore);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC11 · Tính xác định — gửi lại phải ra đúng điểm cũ",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Chuyển khoản 500k vào STK 19001234567 rồi gọi 0912345678, chi tiết tại http://vietc0mbank.com\",\n  \"source\": \"SMS\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = pm.response.json().data;",
+                  "const before = Number(pm.collectionVariables.get('lastScore'));",
+                  "pm.test('cùng input → cùng điểm (rule engine, không phải LLM)', () => pm.expect(d.result.riskScore).to.eql(before));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 · Validate đầu vào",
+      "item": [
+        {
+          "name": "TC12 · text rỗng → 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"text\": \"\",\n  \"source\": \"SMS\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+                  "const b = pm.response.json();",
+                  "pm.test('đúng định dạng lỗi của dự án', () => {",
+                  "  pm.expect(b.success).to.be.false;",
+                  "  pm.expect(b.error.code).to.eql('VALIDATION_ERROR');",
+                  "  pm.expect(b.error.details).to.be.an('array').that.is.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC13 · text > 5000 ký tự → 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"text\": \"{{longText}}\",\n  \"source\": \"SMS\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.collectionVariables.set('longText', 'a'.repeat(5001));"]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('mã lỗi đúng', () => pm.expect(pm.response.json().error.code).to.eql('VALIDATION_ERROR'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC14 · source không hợp lệ → 400",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"text\": \"xin chào\",\n  \"source\": \"TELEGRAM\"\n}" },
+            "url": { "raw": "{{baseUrl}}/v1/scan/text", "host": ["{{baseUrl}}"], "path": ["v1", "scan", "text"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('chỉ ra đúng field sai', () => pm.expect(JSON.stringify(pm.response.json().error.details)).to.include('source'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
